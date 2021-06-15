@@ -9,6 +9,7 @@ const knex = require('../data/db-config');
 const server = express();
 const authRouter = require('./auth/auth-router');
 const userRouter = require('./users/users-router');
+const { NONAME } = require('dns');
 /**
   Do what needs to be done to support sessions with the `express-session` package!
   To respect users' privacy, do NOT send them a cookie unless they log in.
@@ -40,6 +41,7 @@ server.use(
 			maxAge: 1000 * 60 * 10,
 			secure: false, // if true, only works over TLS/https
 			httpOnly: false // if true, cookie not in document
+			// sameSite: 'none',
 		}
 	})
 );
