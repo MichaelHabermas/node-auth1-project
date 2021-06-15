@@ -27,7 +27,7 @@ router.post(
 		}
 	}
 );
-/** 1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
+/* 1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
  response: status 200
  { "user_id": 2, "username": "sue" }
  
