@@ -3,6 +3,8 @@ const express = require('express');
 const helmet = require('helmet'); // whats all this about?
 const cors = require('cors');
 const session = require('express-session');
+const Store = require('connect-session-knex')(session);
+const knex = require('../data/db-config');
 
 const server = express();
 const authRouter = require('./auth/auth-router');
@@ -25,13 +27,20 @@ server.use(
 	session({
 		name: 'chocolatechip',
 		secret: 'keep it secret', // .env file
+		saveUninitialized: false, // session not saved automatically
+		resave: false, // required by some session stores
+		store: new Store({
+			knex,
+			createTable: true,
+			clearInterval: 1000 * 60 * 10,
+			tablename: 'sessions',
+			sidfieldname: 'sid' // whats all this about?
+		}),
 		cookie: {
-			maxAge: 1000 * 120,
+			maxAge: 1000 * 60 * 10,
 			secure: false, // if true, only works over TLS/https
 			httpOnly: false // if true, cookie not in document
-		},
-		resave: false, // required by some session stores
-		saveUninitialized: false // session not saved automatically
+		}
 	})
 );
 
