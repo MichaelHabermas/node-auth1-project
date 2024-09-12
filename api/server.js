@@ -1,7 +1,15 @@
-const express = require("express");
-const helmet = require("helmet");
-const cors = require("cors");
+const path = require('path'); // whats all this about?
+const express = require('express');
+const helmet = require('helmet'); // whats all this about?
+const cors = require('cors');
+const session = require('express-session');
+const Store = require('connect-session-knex')(session);
+const knex = require('../data/db-config');
 
+const server = express();
+const authRouter = require('./auth/auth-router');
+const userRouter = require('./users/users-router');
+const { NONAME } = require('dns');
 /**
   Do what needs to be done to support sessions with the `express-session` package!
   To respect users' privacy, do NOT send them a cookie unless they log in.
@@ -14,22 +22,47 @@ const cors = require("cors");
   The session can be persisted in memory (would not be adecuate for production)
   or you can use a session store like `connect-session-knex`.
  */
+server.use(express.static(path.join(__dirname, '../client'))); // whats all this about?
 
-const server = express();
+server.use(
+	session({
+		name: 'chocolatechip',
+		secret: 'keep it secret', // .env file
+		saveUninitialized: false, // session not saved automatically
+		resave: false, // required by some session stores
+		store: new Store({
+			knex,
+			createTable: true,
+			clearInterval: 1000 * 60 * 10,
+			tablename: 'sessions',
+			sidfieldname: 'sid' // whats all this about?
+		}),
+		cookie: {
+			maxAge: 1000 * 60 * 10,
+			secure: false, // if true, only works over TLS/https
+			httpOnly: false // if true, cookie not in document
+			// sameSite: 'none',
+		}
+	})
+);
 
-server.use(helmet());
+server.use(helmet()); // whats all this about?
 server.use(express.json());
 server.use(cors());
 
-server.get("/", (req, res) => {
-  res.json({ api: "up" });
+server.use('/api/users', userRouter);
+server.use('/api/auth', authRouter);
+
+server.get('/', (req, res) => {
+	res.json({ api: 'up' });
 });
 
-server.use((err, req, res, next) => { // eslint-disable-line
-  res.status(err.status || 500).json({
-    message: err.message,
-    stack: err.stack,
-  });
+server.use((err, req, res, next) => {
+	// eslint-disable-line
+	res.status(err.status || 500).json({
+		message: err.message,
+		stack: err.stack
+	});
 });
 
 module.exports = server;
